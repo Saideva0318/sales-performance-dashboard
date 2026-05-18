@@ -1,52 +1,68 @@
-# Sales Performance Analysis Dashboard
+# 📊 Sales Performance Analysis Dashboard
 
 ## Problem Statement
-Organizations struggle to gain real-time visibility into sales performance across regions, products, and time periods. This project builds an interactive analytics dashboard to track KPIs, identify top performers, and uncover revenue trends.
+Retail businesses often struggle to gain timely insights from fragmented sales data spread across regions, products, and time periods. Without a unified analytical view, decision-makers miss opportunities to optimize revenue, identify underperforming segments, and forecast future sales trends.
 
 ## Approach
-1. Load and clean synthetic sales data (CSV)
-2. Engineer features: monthly revenue, YoY growth, region-wise breakdown
-3. Visualize KPIs using Plotly/Matplotlib dashboards
-4. Export summary report as HTML + static charts
+1. **Data Generation** — Synthetic sales dataset simulating 2 years of retail transactions across regions and product categories
+2. **EDA & Cleaning** — Handle missing values, outliers, and data type normalization
+3. **Feature Engineering** — Month-over-month growth, rolling averages, revenue per unit
+4. **Visualization** — Interactive Plotly/Dash dashboard with KPI cards, trend lines, regional heatmaps
+5. **Insights** — Top-performing products, seasonal trends, regional breakdowns
 
 ## Tech Stack
-- **Python** 3.10+
-- **Pandas** — data manipulation
-- **Plotly** — interactive visualizations
-- **Matplotlib / Seaborn** — static charts
-- **Jupyter Notebook** — exploratory analysis
-- **CSV** — sample dataset
+| Tool | Purpose |
+|------|---------|
+| Python 3.10+ | Core language |
+| Pandas | Data manipulation |
+| NumPy | Numerical operations |
+| Plotly / Dash | Interactive dashboards |
+| Matplotlib / Seaborn | Static visualizations |
+| Jupyter Notebook | Exploratory analysis |
+| SQLite | Local data storage |
 
 ## Project Structure
 ```
 sales-performance-dashboard/
 ├── data/
-│   ├── raw/
-│   │   └── sales_data.csv
-│   └── processed/
-│       └── sales_cleaned.csv
+│   ├── raw/                  # Raw generated CSV data
+│   └── processed/            # Cleaned and transformed data
 ├── notebooks/
-│   └── exploratory_analysis.ipynb
+│   └── 01_eda_analysis.ipynb # Exploratory Data Analysis
 ├── src/
-│   ├── data_loader.py
-│   ├── data_processor.py
-│   └── visualizer.py
+│   ├── data_generator.py     # Synthetic data creation
+│   ├── data_processor.py     # Cleaning & feature engineering
+│   ├── visualizations.py     # Chart generation functions
+│   └── dashboard.py          # Dash app entry point
 ├── outputs/
-│   └── dashboard.html
+│   └── charts/               # Exported chart images
 ├── requirements.txt
 └── README.md
 ```
 
-## How to Run
+## Getting Started
 ```bash
+# Clone the repo
+git clone https://github.com/Saideva0318/sales-performance-dashboard.git
+cd sales-performance-dashboard
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Generate mock data
+python src/data_generator.py
+
+# Run data processing
 python src/data_processor.py
-python src/visualizer.py
+
+# Launch interactive dashboard
+python src/dashboard.py
+# Open http://127.0.0.1:8050 in your browser
 ```
 
-## Key Insights Extracted
-- Monthly and quarterly revenue trends
-- Top 5 products by revenue
-- Region-wise sales distribution
-- Sales rep performance ranking
-- YoY and MoM growth rates
+## Key Metrics Tracked
+- Total Revenue, Units Sold, Average Order Value
+- Month-over-Month (MoM) and Year-over-Year (YoY) growth
+- Top 10 products by revenue
+- Regional sales heatmap
+- Seasonal trend forecasting
