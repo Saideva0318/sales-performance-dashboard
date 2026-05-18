@@ -1,27 +1,32 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 dist/
 build/
 .eggs/
 
-# Virtual environments
+# Environments
 venv/
+.env
 .venv/
 env/
 
 # Jupyter
 .ipynb_checkpoints/
 
-# Data (keep raw data out of git for large files)
+# Data (keep structure, ignore large files)
 data/raw/*.csv
 data/processed/*.csv
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 
-# Outputs
-outputs/
-
-# IDEs
+# IDE
 .vscode/
 .idea/
-*.DS_Store
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

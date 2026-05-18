@@ -1,100 +1,53 @@
-"""Interactive Dash Dashboard for Sales Performance Analysis."""
+"""
+Dash Dashboard Entrypoint
+Interactive sales performance dashboard using Plotly Dash.
+"""
 
-import pandas as pd
 import dash
 from dash import dcc, html, Input, Output
 import plotly.express as px
-import plotly.graph_objects as go
-from visualizations import (
-    plot_monthly_revenue, plot_revenue_by_region,
-    plot_category_breakdown, plot_top_products, plot_channel_performance
-)
 
-# Load data
-df = pd.read_csv('data/processed/sales_processed.csv', parse_dates=['date'])
+from data_loader import load_data
+from transformations import clean_data, engineer_features, compute_kpis, monthly_revenue_trend, regional_performance, top_products, sales_rep_leaderboard
+from visualizations import revenue_trend_chart, regional_bar_chart, top_products_chart, profit_margin_scatter
 
-# KPI Calculations
-total_revenue = df['revenue'].sum()
-total_orders = len(df)
-avg_order_value = df['revenue'].mean()
-total_units = df['quantity'].sum()
+# ─── Load & Prepare Data ──────────────────────────────────────────────────────
+raw_df = load_data()
+df = engineer_features(clean_data(raw_df))
+kpis = compute_kpis(df)
+monthly_df = monthly_revenue_trend(df)
+regional_df = regional_performance(df)
+products_df = top_products(df)
 
-app = dash.Dash(__name__, title='Sales Performance Dashboard')
+# ─── App Layout ───────────────────────────────────────────────────────────────
+app = dash.Dash(__name__, title="Sales Performance Dashboard")
 
 app.layout = html.Div([
-    html.H1('📊 Sales Performance Dashboard',
-            style={'textAlign': 'center', 'color': '#1565C0', 'fontFamily': 'Arial'}),
+    html.H1("📊 Sales Performance Dashboard", style={"textAlign": "center", "color": "#2c3e50", "padding": "20px"}),
 
     # KPI Cards
     html.Div([
-        html.Div([html.H3('Total Revenue'), html.H2(f'${total_revenue:,.0f}')],
-                 className='kpi-card', style={'background': '#E3F2FD', 'padding': '20px',
-                                              'borderRadius': '10px', 'textAlign': 'center', 'flex': 1, 'margin': '10px'}),
-        html.Div([html.H3('Total Orders'), html.H2(f'{total_orders:,}')],
-                 className='kpi-card', style={'background': '#E8F5E9', 'padding': '20px',
-                                              'borderRadius': '10px', 'textAlign': 'center', 'flex': 1, 'margin': '10px'}),
-        html.Div([html.H3('Avg Order Value'), html.H2(f'${avg_order_value:.2f}')],
-                 className='kpi-card', style={'background': '#FFF3E0', 'padding': '20px',
-                                              'borderRadius': '10px', 'textAlign': 'center', 'flex': 1, 'margin': '10px'}),
-        html.Div([html.H3('Units Sold'), html.H2(f'{total_units:,}')],
-                 className='kpi-card', style={'background': '#F3E5F5', 'padding': '20px',
-                                              'borderRadius': '10px', 'textAlign': 'center', 'flex': 1, 'margin': '10px'}),
-    ], style={'display': 'flex', 'justifyContent': 'space-around', 'padding': '20px'}),
+        html.Div([html.H4("Total Revenue"), html.H2(f"${kpis['total_revenue']:,.0f}")], className="kpi-card", style={"background": "#3498db", "color": "white", "padding": "20px", "margin": "10px", "borderRadius": "8px", "textAlign": "center", "flex": "1"}),
+        html.Div([html.H4("Total Profit"), html.H2(f"${kpis['total_profit']:,.0f}")], className="kpi-card", style={"background": "#2ecc71", "color": "white", "padding": "20px", "margin": "10px", "borderRadius": "8px", "textAlign": "center", "flex": "1"}),
+        html.Div([html.H4("Avg Margin"), html.H2(f"{kpis['avg_profit_margin_pct']:.1f}%")], className="kpi-card", style={"background": "#9b59b6", "color": "white", "padding": "20px", "margin": "10px", "borderRadius": "8px", "textAlign": "center", "flex": "1"}),
+        html.Div([html.H4("Total Orders"), html.H2(f"{kpis['total_orders']:,}")], className="kpi-card", style={"background": "#e74c3c", "color": "white", "padding": "20px", "margin": "10px", "borderRadius": "8px", "textAlign": "center", "flex": "1"}),
+        html.Div([html.H4("YoY Growth"), html.H2(f"{kpis['yoy_revenue_growth_pct']:+.1f}%" if kpis['yoy_revenue_growth_pct'] else "N/A")], className="kpi-card", style={"background": "#f39c12", "color": "white", "padding": "20px", "margin": "10px", "borderRadius": "8px", "textAlign": "center", "flex": "1"}),
+    ], style={"display": "flex", "flexWrap": "wrap", "margin": "0 20px"}),
 
-    # Filters
+    # Charts Row 1
     html.Div([
-        html.Label('Filter by Region:'),
-        dcc.Dropdown(
-            id='region-filter',
-            options=[{'label': 'All Regions', 'value': 'All'}] +
-                    [{'label': r, 'value': r} for r in df['region'].unique()],
-            value='All', clearable=False, style={'width': '300px'}
-        ),
-        html.Label('Filter by Category:', style={'marginLeft': '20px'}),
-        dcc.Dropdown(
-            id='category-filter',
-            options=[{'label': 'All Categories', 'value': 'All'}] +
-                    [{'label': c, 'value': c} for c in df['category'].unique()],
-            value='All', clearable=False, style={'width': '300px', 'marginLeft': '10px'}
-        ),
-    ], style={'display': 'flex', 'alignItems': 'center', 'padding': '10px 20px'}),
+        dcc.Graph(figure=revenue_trend_chart(monthly_df), style={"flex": "2"}),
+        dcc.Graph(figure=regional_bar_chart(regional_df), style={"flex": "1"}),
+    ], style={"display": "flex", "margin": "10px"}),
 
-    # Charts
-    dcc.Graph(id='monthly-trend'),
+    # Charts Row 2
     html.Div([
-        dcc.Graph(id='region-chart', style={'flex': 1}),
-        dcc.Graph(id='category-chart', style={'flex': 1}),
-    ], style={'display': 'flex'}),
-    dcc.Graph(id='top-products'),
-    dcc.Graph(id='channel-chart'),
-], style={'fontFamily': 'Arial', 'backgroundColor': '#F9FAFB', 'padding': '20px'})
+        dcc.Graph(figure=top_products_chart(products_df), style={"flex": "1"}),
+        dcc.Graph(figure=profit_margin_scatter(df), style={"flex": "1"}),
+    ], style={"display": "flex", "margin": "10px"}),
+
+], style={"fontFamily": "Arial, sans-serif", "backgroundColor": "#f5f6fa"})
 
 
-@app.callback(
-    [Output('monthly-trend', 'figure'),
-     Output('region-chart', 'figure'),
-     Output('category-chart', 'figure'),
-     Output('top-products', 'figure'),
-     Output('channel-chart', 'figure')],
-    [Input('region-filter', 'value'),
-     Input('category-filter', 'value')]
-)
-def update_charts(region, category):
-    filtered = df.copy()
-    if region != 'All':
-        filtered = filtered[filtered['region'] == region]
-    if category != 'All':
-        filtered = filtered[filtered['category'] == category]
-    return (
-        plot_monthly_revenue(filtered),
-        plot_revenue_by_region(filtered),
-        plot_category_breakdown(filtered),
-        plot_top_products(filtered),
-        plot_channel_performance(filtered)
-    )
-
-
-if __name__ == '__main__':
-    print("🚀 Starting Sales Performance Dashboard...")
-    print("📊 Open http://127.0.0.1:8050 in your browser")
+if __name__ == "__main__":
     app.run(debug=True)
